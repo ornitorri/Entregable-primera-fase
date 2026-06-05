@@ -1,0 +1,28 @@
+{
+  "placeholderImages": [
+    {
+      "id": "app-logo",
+      "description": "Logotipo oficial de READZZI",
+      "imageUrl": "/logo.png",
+      "imageHint": "owl logo"
+    },
+    {
+      "id": "feat-library",
+      "description": "Biblioteca barroca majestuosa con techos pintados",
+      "imageUrl": "https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2000&auto=format&fit=crop",
+      "imageHint": "grand library"
+    },
+    {
+      "id": "feat-reading",
+      "description": "Persona leyendo un libro tranquilamente",
+      "imageUrl": "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?q=80&w=2000&auto=format&fit=crop",
+      "imageHint": "person reading"
+    },
+    {
+      "id": "feat-nature",
+      "description": "Libro abierto con páginas en abanico",
+      "imageUrl": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=2000&auto=format&fit=crop",
+      "imageHint": "open book"
+    }
+  ]
+}

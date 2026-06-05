@@ -1,0 +1,22 @@
+{
+  "placeholderImages": [
+    {
+      "id": "app-logo",
+      "description": "Logotipo oficial de READZZI",
+      "imageUrl": "/logo.png",
+      "imageHint": "owl logo"
+    },
+    {
+      "id": "book-1",
+      "description": "Modern novel cover",
+      "imageUrl": "https://picsum.photos/seed/book1/400/600",
+      "imageHint": "book cover"
+    },
+    {
+      "id": "book-2",
+      "description": "Classic literature book",
+      "imageUrl": "https://picsum.photos/seed/book2/400/600",
+      "imageHint": "old book"
+    }
+  ]
+}
