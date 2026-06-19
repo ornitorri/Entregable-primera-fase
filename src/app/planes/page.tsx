@@ -137,6 +137,53 @@ export default function PlanesPage() {
         </div>
       </section>
 
+      {/* Descripción oficial de planes (texto proporcionado) */}
+      <section className="max-w-4xl mx-auto px-6 py-8 text-white">
+        <div className="space-y-8">
+          <div className="bg-white/3 rounded-2xl p-6">
+            <h3 className="text-2xl font-black">🚀 Prueba Gratuita – 15 Días</h3>
+            <p className="mt-2 text-sm text-white/80">Descubre el universo Readzzi sin compromiso.</p>
+            <ul className="mt-3 list-disc list-inside text-sm text-white/80 space-y-1">
+              <li>Acceso completo durante 15 días.</li>
+              <li>Explora la comunidad de lectores.</li>
+              <li>Publica tus primeras reseñas.</li>
+              <li>Crea tu biblioteca digital.</li>
+              <li>Cancela cuando quieras.</li>
+            </ul>
+            <p className="mt-3 italic text-sm text-white/70">✨ Empieza gratis y descubre una nueva forma de vivir la lectura.</p>
+          </div>
+
+          <div className="bg-white/3 rounded-2xl p-6">
+            <h3 className="text-2xl font-black">👑 Readzzer Premium</h3>
+            <p className="mt-2 text-sm text-white/80">La membresía para quienes quieren vivir más que solo leer.</p>
+            <ul className="mt-3 list-disc list-inside text-sm text-white/80 space-y-1">
+              <li>📚 Acceso ilimitado a todas las funciones Premium.</li>
+              <li>⭐ Mayor visibilidad para tus publicaciones y reseñas.</li>
+              <li>🤝 Comunidad exclusiva de lectores y creadores.</li>
+              <li>🍽️ Acceso a experiencias y beneficios en restaurantes extraordinarios, cafeterías y lugares seleccionados.</li>
+              <li>🎟️ Invitaciones a eventos, encuentros literarios y experiencias únicas.</li>
+              <li>🎁 Descuentos y recompensas exclusivas por ser miembro Premium.</li>
+            </ul>
+            <p className="mt-3 italic text-sm text-white/70">✨ Porque en Readzzi, los libros también abren la puerta a experiencias inolvidables.</p>
+          </div>
+
+          <div className="bg-white/3 rounded-2xl p-6">
+            <h3 className="text-2xl font-black">💎 Plan Embajador</h3>
+            <p className="mt-2 text-sm text-white/80">Convierte tu pasión por Readzzi en una fuente de ingresos.</p>
+            <ul className="mt-3 list-disc list-inside text-sm text-white/80 space-y-1">
+              <li>💰 Genera dinero reclutando nuevos miembros.</li>
+              <li>🌍 Construye y lidera tu propia red de embajadores.</li>
+              <li>📈 Obtén comisiones y beneficios exclusivos.</li>
+              <li>🎁 Recibe una Caja de Bienvenida Readzzi al convertirte en Embajador.</li>
+              <li>👑 Acceso prioritario a lanzamientos, reconocimientos y oportunidades especiales.</li>
+            </ul>
+            <p className="mt-3 italic text-sm text-white/70">🚀 Inspira personas, crea comunidad y haz crecer tus ingresos con Readzzi.</p>
+          </div>
+
+          <div className="text-sm text-white/70 italic">Además: por cada compra en Readzzi acumulas puntos que podrás canjear por descuentos o marcos para tu perfil.</div>
+        </div>
+      </section>
+
       {/* Plans Grid */}
       <section className="max-w-7xl mx-auto px-6 py-24">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">

@@ -56,10 +56,51 @@ export default function PerfilPage() {
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [redeemAmount, setRedeemAmount] = useState<number>(0);
+  const [redeemProcessing, setRedeemProcessing] = useState(false);
+  const [rewards, setRewards] = useState<any[]>([]);
+  const [loadingRewards, setLoadingRewards] = useState(false);
+  const [ownedRewards, setOwnedRewards] = useState<any[]>([]);
+  const [loadingOwned, setLoadingOwned] = useState(false);
 
   useEffect(() => {
     fetchUserProfile();
+    fetchRewards();
+    fetchOwnedRewards();
   }, []);
+
+  const fetchRewards = async () => {
+    try {
+      setLoadingRewards(true);
+      const res = await fetch('/api/rewards');
+      if (!res.ok) return;
+      const data = await res.json();
+      setRewards(data || []);
+    } catch (err) {
+      console.error('Error fetching rewards', err);
+    } finally {
+      setLoadingRewards(false);
+    }
+  };
+
+  const fetchOwnedRewards = async () => {
+    try {
+      setLoadingOwned(true);
+      const token = localStorage.getItem('token') || localStorage.getItem('auth_token') || (() => {
+        const m = document.cookie.match(/(^|;)\s*readzzi_token=([^;]+)/);
+        return m ? decodeURIComponent(m[2]) : null;
+      })();
+      if (!token) return;
+      const res = await fetch('/api/user/rewards', { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return;
+      const data = await res.json();
+      setOwnedRewards(data || []);
+    } catch (err) {
+      console.error('Error fetching owned rewards', err);
+    } finally {
+      setLoadingOwned(false);
+    }
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -230,7 +271,7 @@ export default function PerfilPage() {
               </div>
 
               {/* Quick Stats Grid */}
-              <div className="grid grid-cols-3 gap-2 pt-6 border-t border-white/5">
+                <div className="grid grid-cols-3 gap-2 pt-6 border-t border-white/5">
                 {[
                   { val: stats?.books || '0', label: 'Libros' },
                   { val: stats?.reviews || '0', label: 'Reseñas' },
@@ -241,6 +282,13 @@ export default function PerfilPage() {
                     <span className="text-[8px] font-bold text-white/20 uppercase tracking-tighter">{s.label}</span>
                   </div>
                 ))}
+              </div>
+
+              <div className="pt-4 border-t border-white/5">
+                <div className="text-center">
+                  <span className="block text-2xl font-black text-white">{user?.points || 0}</span>
+                  <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Puntos acumulados</span>
+                </div>
               </div>
 
               {/* Navigation Tabs - Hidden on mobile (uses tabs below header) */}
@@ -489,6 +537,172 @@ export default function PerfilPage() {
                   </div>
                 ))}
               </div>
+            </Card>
+
+            {/* Puntos Widget */}
+            <Card className="bg-white/[0.03] border-white/10 rounded-[2.5rem] p-6">
+              <h4 className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-4">Puntos</h4>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="text-2xl font-black text-white">{user?.points || 0}</div>
+                  <div className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Disponibles</div>
+                </div>
+                <div>
+                  <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="bg-accent text-white px-3 py-2 rounded-xl text-sm font-bold">Cómo canjear</button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <input
+                  type="number"
+                  min={1}
+                  value={redeemAmount || ''}
+                  onChange={(e) => setRedeemAmount(Number(e.target.value))}
+                  placeholder="Cantidad de puntos a canjear"
+                  className="w-full bg-black/20 border border-white/5 rounded-xl p-3 text-white"
+                />
+                <div className="flex gap-2">
+                  <button
+                    disabled={redeemProcessing}
+                    onClick={async () => {
+                      try {
+                        setRedeemProcessing(true);
+                        const token = localStorage.getItem('token');
+                        const res = await fetch('/api/user/points', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                          body: JSON.stringify({ points: redeemAmount, reason: 'canje_perfil' })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) return alert(data.error || 'Error al canjear puntos');
+                        alert('Canje exitoso. Puntos disponibles: ' + data.points);
+                        // refrescar perfil
+                        window.location.reload();
+                      } catch (err) {
+                        console.error(err);
+                        alert('Error de red');
+                      } finally { setRedeemProcessing(false); }
+                    }}
+                    className="flex-1 bg-accent text-white rounded-xl py-3 font-bold disabled:opacity-50"
+                  >
+                    {redeemProcessing ? 'Procesando...' : 'Canjear'}
+                  </button>
+                  <button onClick={() => setRedeemAmount(0)} className="flex-1 bg-white/5 text-white/60 rounded-xl py-3 font-bold">Limpiar</button>
+                </div>
+                <p className="text-[10px] text-white/30">Los puntos se descuentan inmediatamente y quedan registrados en tu historial.</p>
+              </div>
+            </Card>
+
+            {/* Tienda de recompensas */}
+            <Card className="bg-white/[0.03] border-white/10 rounded-[2.5rem] p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Tienda de Recompensas</h4>
+                <button onClick={fetchRewards} className="text-accent text-[9px] font-black">Actualizar</button>
+              </div>
+              {loadingRewards ? (
+                <div className="text-white/60 text-sm">Cargando recompensas...</div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {rewards.map((r) => (
+                    <div key={r.id} className="flex items-center justify-between bg-black/10 p-3 rounded-xl">
+                      <div>
+                        <div className="font-bold text-white">{r.name}</div>
+                        <div className="text-[11px] text-white/40">{r.description}</div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="text-sm font-black">{r.points_cost} pts</div>
+                        <button onClick={async () => {
+                          try {
+                            const token = localStorage.getItem('token');
+                            const res = await fetch('/api/rewards/redeem', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                              body: JSON.stringify({ rewardId: r.id })
+                            });
+                            const data = await res.json();
+                            if (!res.ok) return alert(data.error || 'Error al canjear');
+                            alert('Recompensa canjeada: ' + data.reward.name);
+                            // refresh profile and rewards
+                            fetchUserProfile();
+                            fetchRewards();
+                            fetchOwnedRewards();
+                          } catch (err) {
+                            console.error(err);
+                            alert('Error de red');
+                          }
+                        }} className="bg-accent text-white px-3 py-1 rounded-xl text-sm font-bold">Canjear</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            {/* Mis recompensas (stickers, marcos) */}
+            <Card className="bg-white/[0.03] border-white/10 rounded-[2.5rem] p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Mis Recompensas</h4>
+                <button onClick={fetchOwnedRewards} className="text-accent text-[9px] font-black">Actualizar</button>
+              </div>
+              {loadingOwned ? (
+                <div className="text-white/60 text-sm">Cargando...</div>
+              ) : ownedRewards.length === 0 ? (
+                <div className="text-white/50 text-sm">No has canjeado recompensas aún.</div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {ownedRewards.map((or) => (
+                    <div key={or.user_reward_id} className="flex items-center justify-between bg-black/10 p-3 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        {or.image_url ? (
+                          <img
+                            src={(or.image_url.startsWith('http') ? or.image_url : (typeof window !== 'undefined' ? window.location.origin + or.image_url : or.image_url))}
+                            alt={or.name}
+                            className="w-12 h-12 rounded-md object-cover"
+                            onError={(e: any) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-white/5 rounded-md flex items-center justify-center">{or.name?.charAt(0)}</div>
+                        )}
+                        <div>
+                          <div className="font-bold text-white">{or.name}</div>
+                          <div className="text-[11px] text-white/40">{or.type} • Canjeado: {new Date(or.created_at).toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="text-[10px] text-white/30 italic">ID {or.user_reward_id}</div>
+                        {/* Apply frame button for frames */}
+                        {or.type === 'frame' && (
+                          <button onClick={async () => {
+                            try {
+                              const token = localStorage.getItem('token') || localStorage.getItem('auth_token') || (() => {
+                                const m = document.cookie.match(/(^|;)\s*readzzi_token=([^;]+)/);
+                                return m ? decodeURIComponent(m[2]) : null;
+                              })();
+                              if (!token) return alert('No autenticado');
+                              const res = await fetch('/api/user/rewards/apply', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({ user_reward_id: or.user_reward_id })
+                              });
+                              const data = await res.json();
+                              if (!res.ok) return alert(data.error || 'Error al aplicar');
+                              alert('Marco aplicado: ' + or.name);
+                              // actualizar estado local para reflejar aplicado
+                              setOwnedRewards((prev) => prev.map((x) => ({ ...x, metadata: { ...(x.metadata || {}), applied: x.user_reward_id === or.user_reward_id } })));
+                            } catch (err) {
+                              console.error(err);
+                              alert('Error de red');
+                            }
+                          }} className="bg-accent text-white px-3 py-1 rounded-xl text-sm font-bold">Aplicar</button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
           </aside>
 

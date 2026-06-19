@@ -8,11 +8,11 @@ const JWT_SECRET = new TextEncoder().encode(
 
 // Rutas protegidas por rol
 const ROLE_ROUTES: Record<string, string[]> = {
-  admin: ['/', '/admin', '/catalogo', '/planes', '/noticias', '/comunidad', '/perfil', '/carrito', '/checkout'],
+  admin: ['/', '/admin', '/catalogo', '/planes', '/noticias', '/comunidad', '/perfil', '/carrito', '/checkout', '/mensajes'],
   logistics: ['/', '/logistica', '/perfil'],
   marketing: ['/', '/mercadeo', '/perfil'],
   publicity: ['/', '/publicidad', '/perfil'],
-  user: ['/', '/catalogo', '/planes', '/noticias', '/comunidad', '/perfil', '/carrito', '/checkout', '/estante'],
+  user: ['/', '/catalogo', '/planes', '/noticias', '/comunidad', '/perfil', '/carrito', '/checkout', '/estante', '/mensajes'],
 };
 
 export async function middleware(request: NextRequest) {
@@ -102,5 +102,6 @@ export const config = {
     '/carrito/:path*',
     '/checkout/:path*',
     '/estante/:path*',
+    '/mensajes/:path*',
   ],
 };

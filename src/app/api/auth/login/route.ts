@@ -49,7 +49,10 @@ export async function POST(request: NextRequest) {
     // Validación adicional: asegurar que la contraseña existe
     if (!user.password) {
       console.error('[LOGIN] Usuario sin contraseña hasheada:', user.id);
-      return NextResponse.json({ error: 'Error de seguridad: contraseña no inicializada' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Esta cuenta usa Google. Inicia sesión con el botón de Google.' },
+        { status: 400 }
+      );
     }
 
     // Verificar contraseña
@@ -63,6 +66,12 @@ export async function POST(request: NextRequest) {
 
     if (!isValidPassword) {
       console.log('[LOGIN] Contraseña incorrecta para usuario:', email);
+      if (user.google_id) {
+        return NextResponse.json(
+          { error: 'Esta cuenta usa Google. Inicia sesión con el botón de Google.' },
+          { status: 401 }
+        );
+      }
       return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 });
     }
 

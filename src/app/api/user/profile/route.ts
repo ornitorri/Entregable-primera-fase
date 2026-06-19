@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    const users = await query('SELECT id, first_name, last_name, email, phone, alias, avatar_url, bio, location, created_at FROM users WHERE id = ?', [decoded.id]) as any[];
+    const users = await query('SELECT id, first_name, last_name, email, phone, alias, avatar_url, bio, location, created_at, COALESCE(points,0) as points FROM users WHERE id = ?', [decoded.id]) as any[];
     
     if (users.length === 0) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
         avatarUrl: user.avatar_url,
         bio: user.bio,
         location: user.location,
+        points: user.points || 0,
         createdAt: user.created_at
       },
       stats: {

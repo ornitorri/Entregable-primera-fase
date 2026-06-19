@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import GoogleAuthProvider from '@/components/auth/GoogleAuthProvider';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -103,6 +105,7 @@ export default function LoginPage() {
   };
 
   return (
+    <GoogleAuthProvider>
     <main className="relative min-h-screen w-full flex items-center justify-center overflow-hidden px-6 bg-black">
       <div className="absolute inset-0 z-0">
         <Image 
@@ -193,6 +196,14 @@ export default function LoginPage() {
           </Button>
         </form>
 
+        <div className="w-full flex items-center gap-4 py-2">
+          <div className="h-px flex-1 bg-white/10" />
+          <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">o continúa con</span>
+          <div className="h-px flex-1 bg-white/10" />
+        </div>
+
+        <GoogleSignInButton mode="login" />
+
         <div className="pt-4 flex flex-col gap-2">
           <p className="text-white/40 text-[11px] font-medium uppercase tracking-widest">
             ¿Aún no tienes cuenta?
@@ -203,5 +214,6 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+    </GoogleAuthProvider>
   );
 }

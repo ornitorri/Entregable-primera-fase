@@ -17,6 +17,7 @@ import {
   Globe,
   Shield,
   Truck,
+  MessageCircle,
   Megaphone,
   TrendingUp
 } from 'lucide-react';
@@ -49,6 +50,7 @@ export default function Navigation({ activeTab }: NavigationProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [cartCount, setCartCount] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -135,6 +137,38 @@ export default function Navigation({ activeTab }: NavigationProps) {
     return () => window.removeEventListener('cart-updated', handleCartUpdate);
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    const fetchUnreadMessages = async () => {
+      const token = getAuthToken();
+      if (!token) {
+        setUnreadMessages(0);
+        return;
+      }
+      try {
+        const response = await fetch('/api/messages', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const total = (data.data || []).reduce(
+            (sum: number, c: { unreadCount: number }) => sum + c.unreadCount,
+            0
+          );
+          setUnreadMessages(total);
+        }
+      } catch {
+        setUnreadMessages(0);
+      }
+    };
+
+    if (isAuthenticated && !['logistics', 'marketing', 'publicity'].includes(userInfo?.role)) {
+      fetchUnreadMessages();
+      const interval = setInterval(fetchUnreadMessages, 10000);
+      return () => clearInterval(interval);
+    }
+    setUnreadMessages(0);
+  }, [isAuthenticated, userInfo?.role]);
+
   const items = [
     { id: 'tienda', label: 'Catálogo', icon: ShoppingBag, href: '/catalogo', roles: ['admin', 'user', 'marketing'] },
     { id: 'subscripciones', label: 'Planes', icon: CreditCard, href: '/planes', roles: ['admin', 'user'] },
@@ -149,6 +183,7 @@ export default function Navigation({ activeTab }: NavigationProps) {
 
   const communityLinks = [
     { label: 'Feed Global', icon: Globe, href: '/comunidad', roles: ['admin', 'user'] },
+    { label: 'Mensajes', icon: MessageCircle, href: '/mensajes', roles: ['admin', 'user'], badge: unreadMessages },
     { label: 'Mi Perfil', icon: User, href: '/perfil', roles: ['admin', 'user'] },
     { label: 'Explorar Clubes', icon: Users, href: '/comunidad/clubes', roles: ['admin', 'user'] },
   ];
@@ -245,7 +280,12 @@ export default function Navigation({ activeTab }: NavigationProps) {
                     <DropdownMenuItem key={`community-${idx}`} asChild className="rounded-xl focus:bg-white/10 focus:text-white p-4 cursor-pointer">
                       <Link href={link.href} className="flex items-center gap-4">
                         <link.icon className="w-4 h-4" />
-                        <span className="font-bold text-xs uppercase tracking-widest">{link.label}</span>
+                        <span className="font-bold text-xs uppercase tracking-widest flex-1">{link.label}</span>
+                        {'badge' in link && link.badge > 0 && (
+                          <Badge className="bg-accent text-white text-[9px] h-5 min-w-5 p-0 flex items-center justify-center">
+                            {link.badge > 9 ? '9+' : link.badge}
+                          </Badge>
+                        )}
                       </Link>
                     </DropdownMenuItem>
                   ))}
@@ -266,6 +306,19 @@ export default function Navigation({ activeTab }: NavigationProps) {
                     <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-white rounded-full border-2 border-black" />
                   </Button>
                 </NotificationPanel>
+              )}
+
+              {!isStaffUser && (
+                <Link href="/mensajes">
+                  <Button variant="ghost" size="icon" className="text-white/40 hover:text-white relative hover:bg-white/5 h-10 w-10 transition-colors">
+                    <MessageCircle className="w-5 h-5" />
+                    {unreadMessages > 0 && (
+                      <Badge className="absolute -top-1 -right-1 bg-accent text-white text-[9px] font-black h-4 w-4 p-0 flex items-center justify-center border border-black">
+                        {unreadMessages > 9 ? '9+' : unreadMessages}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
               )}
 
               {!isStaffUser && (
@@ -381,7 +434,7 @@ export default function Navigation({ activeTab }: NavigationProps) {
                     <ChevronRight className="w-5 h-5 opacity-40" />
                   </Link>
                 ) : (
-                  [...visibleItems, { id: 'comunidad', label: 'Comunidad', icon: Globe, href: '/comunidad', roles: ['admin', 'user'] }].map(({ id, label, icon: Icon, href }) => (
+                  [...visibleItems, { id: 'comunidad', label: 'Comunidad', icon: Globe, href: '/comunidad', roles: ['admin', 'user'] }, { id: 'mensajes', label: 'Mensajes', icon: MessageCircle, href: '/mensajes', roles: ['admin', 'user'] }].map(({ id, label, icon: Icon, href }) => (
                     <Link
                       key={`mobile-${id}`}
                       href={href}

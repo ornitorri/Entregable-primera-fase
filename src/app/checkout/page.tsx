@@ -23,6 +23,7 @@ import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Navigation from '@/components/Navigation';
 import { cn } from '@/lib/utils';
+import { amountFromPoints } from '@/lib/points';
 import { getAuthToken, dispatchCartUpdated } from '@/lib/clientAuth';
 
 interface CartItem {
@@ -59,6 +60,9 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [pointsEarned, setPointsEarned] = useState<number>(0);
+  const [userPoints, setUserPoints] = useState<number>(0);
+  const [applyPoints, setApplyPoints] = useState<number>(0);
 
   const [shippingForm, setShippingForm] = useState<ShippingForm>({
     nombre: '',
@@ -82,7 +86,21 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     fetchCartItems();
+    fetchUserPoints();
   }, []);
+
+  const fetchUserPoints = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+      const res = await fetch('/api/user/points', { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return;
+      const data = await res.json();
+      setUserPoints(data.points || 0);
+    } catch (err) {
+      console.error('Error fetching user points', err);
+    }
+  };
 
   const fetchCartItems = async () => {
     try {
@@ -139,7 +157,8 @@ export default function CheckoutPage() {
 
       const orderData = {
         shipping_address: `${shippingForm.direccion}, ${shippingForm.ciudad}, ${shippingForm.departamento} ${shippingForm.codigoPostal}`,
-        payment_method: paymentForm.metodoPago
+        payment_method: paymentForm.metodoPago,
+        applied_points: applyPoints || 0
       };
 
       const response = await fetch('/api/orders', {
@@ -159,8 +178,12 @@ export default function CheckoutPage() {
 
       const result = await response.json();
       setOrderId(result.orderId);
+      if (result.pointsEarned) setPointsEarned(result.pointsEarned);
       dispatchCartUpdated();
       setStep('exito');
+
+      // refresh user points after order
+      fetchUserPoints();
 
     } catch (error) {
       console.error('Error creating order:', error);
@@ -183,6 +206,12 @@ export default function CheckoutPage() {
               Gracias por tu compra. Hemos enviado el recibo a tu correo electrónico. Tu viaje literario está por comenzar.
             </p>
           </div>
+          {pointsEarned > 0 && (
+            <div className="text-center">
+              <p className="text-lg font-bold text-sage">¡Has ganado {pointsEarned} puntos!</p>
+              <p className="text-sm text-white/70">Los puntos se han agregado a tu cuenta y podrás canjearlos en futuras compras o en la tienda de perfiles.</p>
+            </div>
+          )}
           <div className="bg-parchment/50 border border-warm/40 rounded-[2.5rem] p-8 space-y-4">
             <div className="flex justify-between text-sm font-bold uppercase tracking-widest text-muted">
               <span>Nº de Pedido</span>
@@ -534,6 +563,33 @@ export default function CheckoutPage() {
                   <span className="text-[10px] font-bold uppercase tracking-widest">Garantía total</span>
                 </div>
               </div>
+                {/* Aplicar puntos */}
+                <div className="bg-parchment/30 border border-warm/40 rounded-[2.5rem] p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-bold">Tus puntos disponibles</div>
+                      <div className="text-lg font-black text-white">{userPoints}</div>
+                    </div>
+                    <div className="text-right text-sm text-white/60">
+                      <div>Equivalen a <span className="font-bold">${amountFromPoints(userPoints).toLocaleString()}</span></div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input
+                      type="number"
+                      min={0}
+                      max={userPoints}
+                      value={applyPoints || ''}
+                      onChange={(e) => setApplyPoints(Math.max(0, Number(e.target.value || 0)))}
+                      placeholder="Puntos a aplicar"
+                      className="col-span-2 bg-black/20 border border-white/5 rounded-xl p-3 text-white"
+                    />
+                    <div className="flex items-center">
+                      <div className="text-sm">Descuento: <span className="font-bold">${amountFromPoints(applyPoints || 0).toLocaleString()}</span></div>
+                    </div>
+                  </div>
+                </div>
             </div>
           </div>
         </div>
