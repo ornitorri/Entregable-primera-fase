@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Trophy, Crown, ChevronRight, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -14,16 +14,32 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
 
-const RANKING_DATA = [
-  { id: 1, name: 'Julian Vance', role: 'EMBAJADOR 👑', points: 1240, avatar: 'https://picsum.photos/seed/a1/100/100', medal: '🥇' },
-  { id: 2, name: 'Elena Martínez', role: 'PREMIUM ⭐', points: 980, avatar: 'https://picsum.photos/seed/a2/100/100', medal: '🥈' },
-  { id: 3, name: 'Carlos Ruiz', role: 'USUARIO', points: 750, avatar: 'https://picsum.photos/seed/a3/100/100', medal: '🥉' },
-  { id: 4, name: 'Sofía Lectora', role: 'PREMIUM ⭐', points: 620, avatar: 'https://picsum.photos/seed/user1/100/100', medal: '4️⃣' },
-  { id: 5, name: 'Diego Libros', role: 'USUARIO', points: 410, avatar: 'https://picsum.photos/seed/u3/100/100', medal: '5️⃣' },
-];
-
 export default function ActivityRanking() {
-  const maxPoints = RANKING_DATA[0].points;
+  const [rankingData, setRankingData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRanking();
+  }, []);
+
+  const fetchRanking = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/community/ranking');
+      if (res.ok) {
+        const data = await res.json();
+        setRankingData(data || []);
+      } else {
+        console.error('Error fetching ranking');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const maxPoints = rankingData.length > 0 ? rankingData[0].points : 1;
 
   return (
     <div className="space-y-8">
@@ -52,7 +68,12 @@ export default function ActivityRanking() {
       </div>
 
       <div className="space-y-6">
-        {RANKING_DATA.map((member, i) => (
+        {loading ? (
+          <div className="text-white/60 text-sm">Cargando ranking...</div>
+        ) : rankingData.length === 0 ? (
+          <div className="text-white/60 text-sm">No hay datos disponibles</div>
+        ) : (
+          rankingData.map((member, i) => (
           <div key={member.id} className="group space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -94,6 +115,7 @@ export default function ActivityRanking() {
             </div>
           </div>
         ))}
+        )}
       </div>
 
       <Button variant="ghost" className="w-full text-amber font-bold text-xs uppercase tracking-widest hover:bg-amber-pale py-6 rounded-2xl border-2 border-dashed border-warm/40 hover:border-amber/20">
