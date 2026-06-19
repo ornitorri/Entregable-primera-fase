@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect x="4" y="4" width="112" height="112" rx="18" ry="18" fill="#f8e5a6" stroke="#d4ae37" stroke-width="8" />
+  <rect x="16" y="16" width="88" height="88" rx="14" ry="14" fill="#fff4d6" />
+  <text x="50%" y="60%" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#8b5e0f">Marco</text>
+</svg>

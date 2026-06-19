@@ -94,7 +94,10 @@ export default function PerfilPage() {
       const res = await fetch('/api/user/rewards', { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) return;
       const data = await res.json();
-      setOwnedRewards(data || []);
+      setOwnedRewards((data || []).map((item: any) => ({
+        ...item,
+        metadata: item.metadata ? (typeof item.metadata === 'string' ? JSON.parse(item.metadata) : item.metadata) : {}
+      })));
     } catch (err) {
       console.error('Error fetching owned rewards', err);
     } finally {
@@ -650,57 +653,71 @@ export default function PerfilPage() {
                 <div className="text-white/50 text-sm">No has canjeado recompensas aún.</div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
-                  {ownedRewards.map((or) => (
-                    <div key={or.user_reward_id} className="flex items-center justify-between bg-black/10 p-3 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        {or.image_url ? (
+                  {ownedRewards.map((or) => {
+                    const metadata = or.metadata || {};
+                    const isApplied = !!metadata.applied;
+                    const imageUrl = or.image_url
+                      ? (or.image_url.startsWith('http') ? or.image_url : (typeof window !== 'undefined' ? window.location.origin + or.image_url : or.image_url))
+                      : '/uploads/rewards/default-frame.svg';
+
+                    return (
+                      <div key={or.user_reward_id} className="flex items-center justify-between bg-black/10 p-3 rounded-xl">
+                        <div className="flex items-center gap-3">
                           <img
-                            src={(or.image_url.startsWith('http') ? or.image_url : (typeof window !== 'undefined' ? window.location.origin + or.image_url : or.image_url))}
+                            src={imageUrl}
                             alt={or.name}
                             className="w-12 h-12 rounded-md object-cover"
                             onError={(e: any) => {
                               e.currentTarget.onerror = null;
-                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.src = '/uploads/rewards/default-frame.svg';
                             }}
                           />
-                        ) : (
-                          <div className="w-12 h-12 bg-white/5 rounded-md flex items-center justify-center">{or.name?.charAt(0)}</div>
-                        )}
-                        <div>
-                          <div className="font-bold text-white">{or.name}</div>
-                          <div className="text-[11px] text-white/40">{or.type} • Canjeado: {new Date(or.created_at).toLocaleDateString()}</div>
+                          <div>
+                            <div className="font-bold text-white">{or.name}</div>
+                            <div className="text-[11px] text-white/40">{or.type} • Canjeado: {new Date(or.created_at).toLocaleDateString()}</div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="text-[10px] text-white/30 italic">ID {or.user_reward_id}</div>
+                          <div className={cn(
+                            'text-[10px] font-bold uppercase tracking-[0.2em]',
+                            isApplied ? 'text-lime-300' : 'text-white/30'
+                          )}>
+                            {isApplied ? 'Aplicado' : 'No aplicado'}
+                          </div>
+                          {or.type === 'frame' && (
+                            <button
+                              disabled={isApplied}
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('token') || localStorage.getItem('auth_token') || (() => {
+                                    const m = document.cookie.match(/(^|;)\s*readzzi_token=([^;]+)/);
+                                    return m ? decodeURIComponent(m[2]) : null;
+                                  })();
+                                  if (!token) return alert('No autenticado');
+                                  const res = await fetch('/api/user/rewards/apply', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                    body: JSON.stringify({ user_reward_id: or.user_reward_id })
+                                  });
+                                  const data = await res.json();
+                                  if (!res.ok) return alert(data.error || 'Error al aplicar');
+                                  alert('Marco aplicado: ' + or.name);
+                                  setOwnedRewards((prev) => prev.map((x) => ({ ...x, metadata: { ...(x.metadata || {}), applied: x.user_reward_id === or.user_reward_id } })));
+                                } catch (err) {
+                                  console.error(err);
+                                  alert('Error de red');
+                                }
+                              }}
+                              className="bg-accent text-white px-3 py-1 rounded-xl text-sm font-bold disabled:opacity-50"
+                            >
+                              {isApplied ? 'Aplicado' : 'Aplicar'}
+                            </button>
+                          )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="text-[10px] text-white/30 italic">ID {or.user_reward_id}</div>
-                        {/* Apply frame button for frames */}
-                        {or.type === 'frame' && (
-                          <button onClick={async () => {
-                            try {
-                              const token = localStorage.getItem('token') || localStorage.getItem('auth_token') || (() => {
-                                const m = document.cookie.match(/(^|;)\s*readzzi_token=([^;]+)/);
-                                return m ? decodeURIComponent(m[2]) : null;
-                              })();
-                              if (!token) return alert('No autenticado');
-                              const res = await fetch('/api/user/rewards/apply', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                                body: JSON.stringify({ user_reward_id: or.user_reward_id })
-                              });
-                              const data = await res.json();
-                              if (!res.ok) return alert(data.error || 'Error al aplicar');
-                              alert('Marco aplicado: ' + or.name);
-                              // actualizar estado local para reflejar aplicado
-                              setOwnedRewards((prev) => prev.map((x) => ({ ...x, metadata: { ...(x.metadata || {}), applied: x.user_reward_id === or.user_reward_id } })));
-                            } catch (err) {
-                              console.error(err);
-                              alert('Error de red');
-                            }
-                          }} className="bg-accent text-white px-3 py-1 rounded-xl text-sm font-bold">Aplicar</button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </Card>
